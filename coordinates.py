@@ -33,6 +33,11 @@ def cartToSpherical(r):
     phi = math.atan(r[2] / math.sqrt(r[1]*r[1] + r[0]*r[0]))
     r = math.sqrt(r[0] * r[0] + r[1] * r[1] + r[2] * r[2])
 
+    if theta < 0:
+        theta = theta + 2 * math.pi
+    if phi < 0:
+        phi = phi + 2 * math.pi
+    
     return [r, theta, phi]
 
 def equitorialToHorizontal(h, delta, phi):

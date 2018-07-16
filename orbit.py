@@ -1,4 +1,5 @@
 import juliantime
+import coordinates
 import math
 
 class ConvergenceError(Exception):
@@ -75,21 +76,14 @@ class Orbit:
         self.r = self.a * (1.0 - self.e * math.cos(self.E))
         
         # Heliocentric Ecliptic Cartesian coordinates:
-        self.x_ec = self.r * math.cos(self.Omega) * math.cos(self.omega + self.f) \
-                  - self.r * math.sin(self.Omega) * math.sin(self.omega + self.f) * math.cos(self.i)
-        self.y_ec = self.r * math.sin(self.Omega) * math.cos(self.omega + self.f) \
-                  + self.r * math.cos(self.Omega) * math.sin(self.omega + self.f) * math.cos(self.i)
-        self.z_ec = self.r * math.sin(self.omega + self.f) * math.sin(self.i)
+        self.r_ec = coordinates.rotateCartZ( \
+                    coordinates.rotateCartX( \
+                    coordinates.rotateCartZ([self.r, 0, 0], self.omega + self.f), self.i), self.Omega)             
 
+        self.x_ec, self.y_ec, self.z_ec = self.r_ec
+        
         # Heliocentric Ecliptic Spherical coordinates (Longitude and Latitude):
-        self.alpha = math.atan2(self.y_ec, self.x_ec) 
-        self.delta = math.atan(self.z_ec / math.sqrt(self.y_ec * self.y_ec + self.x_ec * self.x_ec))
-
-        if self.alpha < 0:
-            self.alpha = self.alpha + 2 * math.pi
-        if self.delta < 0:
-            self.delta = self.delta + 2 * math.pi
-            
+        rdummy, self.alpha, self.delta = coordinates.cartToSpherical(self.r_ec)                    
                     
     def printInputParameters(self):
         print("Major axis half  (a)  : " + str(self.a))
