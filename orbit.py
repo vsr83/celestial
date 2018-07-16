@@ -9,15 +9,19 @@ class ConvergenceError(Exception):
         self.maxit   = maxit
         self.tol     = tol
 
+# This class implements the computations related to elliptic orbits.        
 class Orbit:
+
+    # The orbital elements are expressed as affine functions with respect to the time
+    # after the Epoch J2000.0 in terms of Julian centuries:
     def __init__(self, params):
-        
-        self.a_0     = params['a_0']
-        self.e_0     = params['e_0']
-        self.i_0     = params['i_0']
-        self.Omega_0 = params['Omega_0']
-        self.pl_0    = params['pl_0']
-        self.L_0     = params['L_0']
+
+        self.a_0     = params['a_0']       # Semimajor axis
+        self.e_0     = params['e_0']       # Eccentricity
+        self.i_0     = params['i_0']       # Inclination
+        self.Omega_0 = params['Omega_0']   # Longtitude of the ascending node
+        self.pl_0    = params['pl_0']      # Longitude of the periapsis
+        self.L_0     = params['L_0']       # Mean longitude
 
         self.a_delta     = params['a_delta']
         self.e_delta     = params['e_delta']
@@ -50,12 +54,17 @@ class Orbit:
         return E
 
     @staticmethod
+    # Compute the Natural Anomaly from the Eccentric Anomaly
+    # E Eccentric anomaly
+    # e Linear eccentricity
     def solveNaturalAnomaly(E, e):
         xu = (math.cos(E) - e)/(1 - e * math.cos(E))
         yu = math.sqrt(1 - e*e)*math.sin(E)/(1 - e*math.cos(E))
         
         return math.atan2(yu, xu)
 
+    # Compute orbital elements from the Julian time:
+    # JT Julian Time
     def computeParameters(self, JT):
         T = (JT - 2451545.0) / 36525.0
         
@@ -65,14 +74,19 @@ class Orbit:
         self.Omega  = math.radians(self.Omega_0 + self.Omega_delta * T)
         self.pl     = math.radians(self.pl_0    + self.pl_delta * T)
         self.L      = math.radians(self.L_0     + (JT - 2451545.0) * self.L_delta)
-        
+
+
+    # Compute anomalies and Heliocentric Ecliptic Coordinates for the planet:
     def computePosition(self):
+        # Compute mean, eccentric and natural anomalies
         self.M = self.L - self.pl
         self.E = self.solveEccentricAnomaly(self.M, self.e, 1e-9, 20)
         self.f = self.solveNaturalAnomaly(self.E, self.e)
-        
+
+        # Argument of periapsis
         self.omega = self.pl - self.Omega
 
+        # Distance 
         self.r = self.a * (1.0 - self.e * math.cos(self.E))
         
         # Heliocentric Ecliptic Cartesian coordinates:
