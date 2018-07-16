@@ -1,4 +1,5 @@
 import time
+import math
 
 class JulianTime:
     def __init__ (self, UTCOffsetSeconds):

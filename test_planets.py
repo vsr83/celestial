@@ -1,5 +1,7 @@
 import orbit
 import juliantime
+import coordinates
+import math
 
 params_mercury = {'a_0'     : 0.38709893, 'a_delta'     : 0.00000066,   \
                   'e_0'     : 0.20563069, 'e_delta'     : 0.00002527,   \
@@ -77,8 +79,20 @@ dict_planets = {"Mercury" : orbit_mercury, \
 
 #dict_planets = {"Jupiter" : orbit_jupiter}
 
+# Helsinki
+longitude = 24.9333
+latitude = math.radians(60.16)
 
-J = juliantime.JulianTime(-10800)
+J = juliantime.JulianTime(10800)
+ST0 = math.radians(J.getSiderealTime(longitude))
+
+print "Julian Time     : " + str(J.JT)
+print "Sidereal Time   : " + str(math.degrees(ST0))
+
+
+dict_planets['Earth'].computeParameters(J.JT)
+dict_planets['Earth'].computePosition()
+rEarth = [dict_planets['Earth'].x_ec, dict_planets['Earth'].y_ec, dict_planets['Earth'].z_ec]
 
 for planet in dict_planets:
     print(planet + ":")
@@ -88,4 +102,22 @@ for planet in dict_planets:
 #    dict_planets[planet].printInputParameters()
 #    dict_planets[planet].printOrbitParameters()
     dict_planets[planet].printCoordinates()    
-                                                        
+
+    if planet != 'Earth' :
+        rPlanet = [dict_planets[planet].x_ec, dict_planets[planet].y_ec, dict_planets[planet].z_ec]
+        rEarthPlanet = coordinates.diffCart(rPlanet, rEarth)
+
+        eclipticAngle = math.radians(23.43688)
+
+        # Rotation from Ecliptic to Equatorial coordinates
+        rEquatorial = coordinates.rotateCartX(rEarthPlanet, eclipticAngle)
+        
+        equatorialSph = coordinates.cartToSpherical(rEquatorial)
+        print "Rectansion  : " + str(math.degrees(equatorialSph[1]))
+        print "Declination : " + str(math.degrees(equatorialSph[2]))
+
+        h = ST0 - equatorialSph[1]
+        a, A = coordinates.equitorialToHorizontal(h, equatorialSph[2], latitude)
+
+        print "Altitude   : " + str(math.degrees(a))
+        print "Azimuth    : " + str(math.degrees(A))
